@@ -41,31 +41,3 @@ class UrbanSound8KDataset(data.Dataset):
 
     def __len__(self):
         return len(self.dataset)
-
-load = UrbanSound8KDataset('D:\\Work\\CW\\Deep_Learning\\cw\\UrbanSound8K_test.pkl', 'MC')
-a, b, c = load.__getitem__(14)
-print(a.shape)
-print(a.dim())
-print(b)
-print(c)
-# train_loader = torch.utils.data.DataLoader( 
-#       UrbanSound8KDataset('UrbanSound8K_train.pkl', 'LMC'), 
-#       batch_size=32, shuffle=True, 
-#       num_workers=8, pin_memory=True) 
- 
-# val_loader = torch.utils.data.DataLoader( 
-#      UrbanSound8KDataset('UrbanSound8K_test.pkl', 'MC'), 
-#      batch_size=32, shuffle=False, 
-#      num_workers=8, pin_memory=True) 
-
- 
-
-# for i, (input, target, filename) in enumerate(train_loader): 
-# #           training code
-#     print("hello")
-
-# for i, (input, target, filename) in enumerate(val_loader): 
-#     print("hi")
-# #           validation code 
-
- 
