@@ -7,6 +7,7 @@ import torch
 import torch.backends.cudnn
 from torch.utils.data import DataLoader
 from typing import Union, NamedTuple
+from multiprocessing import cpu_count
 
 
 torch.backends.cudnn.benchmark = True
@@ -22,38 +23,45 @@ if torch.cuda.is_available():
 else:
     DEVICE = torch.device("cpu")
 
-
 def main(args):
+    train_dataset = UrbanSound8KDataset('UrbanSound8K_train.pkl', 'LMC')
+    test_dataset = UrbanSound8KDataset('UrbanSound8K_test.pkl', 'LMC')
+
     train_loader = torch.utils.data.DataLoader( 
-        UrbanSound8KDataset('UrbanSound8K_train.pkl', 'LMC'), 
+        train_dataset, 
         batch_size=32, shuffle=True, 
-        num_workers=8, pin_memory=True)
+        num_workers=0, pin_memory=True)
  
     val_loader = torch.utils.data.DataLoader( 
-        UrbanSound8KDataset('UrbanSound8K_test.pkl', 'LMC'), 
+        test_dataset, 
         batch_size=32, shuffle=False, 
-        num_workers=8, pin_memory=True) 
+        num_workers=cpu_count(), pin_memory=True) 
+
 
     model = CNN(1, 10, 0.5)
-    criterion = nn.Softmax()
     model.to(DEVICE)
+
+    criterion = nn.Softmax()
+    
     val_frequency = 2
     step = 0
     print_frequency = 20
 
     for epoch in range(0, 50):
+        print(epoch)
         model.train()
-
         data_load_start_time = time.time()
-        for i, (batch, target, filename) in enumerate(train_loader): 
+   
+        for batch, target, filename in train_loader:
+            
             batch = batch.to(DEVICE)
             target = target.to(DEVICE)
             data_load_end_time = time.time()
 
             logits = model.forward(batch)
-            loss = criterion(logits, target)
-            loss.backward()
-
+            loss = criterion(logits)
+            loss.sum().backward()
+            
             with torch.no_grad():
                 preds = logits.argmax(-1)
                 accuracy = compute_accuracy(target, preds)
@@ -70,9 +78,9 @@ def main(args):
             results = {"preds": [], "labels": []}
             total_loss = 0
             model.eval()
-
+            print("here3")
             with torch.no_grad():
-                for batch, target in val_loader:
+                for batch, target, filename in val_loader:
                     batch = batch.to(DEVICE)
                     target = target.to(DEVICE)
                     logits = model(batch)
@@ -128,16 +136,16 @@ def compute_class_accuracy(
 
 def print_metrics(step, epoch, accuracy, loss, data_load_time, step_time, train_loader):
         epoch_step = step % len(train_loader)
-        print(
-                f"epoch: [{epoch}], "
-                f"step: [{epoch_step}/{len(train_loader)}], "
-                f"batch loss: {loss:.5f}, "
-                f"batch accuracy: {accuracy * 100:2.2f}, "
-                f"data load time: "
-                f"{data_load_time:.5f}, "
-                f"step time: {step_time:.5f}"
-        )
-
+        # print(
+        #         f"epoch: [{epoch}], "
+        #         f"step: [{epoch_step}/{len(train_loader)}], "
+        #         f"batch loss: {loss:.5f}, "
+        #         f"batch accuracy: {accuracy * 100:2.2f}, "
+        #         f"data load time: "
+        #         f"{data_load_time:.5f}, "
+        #         f"step time: {step_time:.5f}"
+        # )
+        print("epoch: {} , step: {} , batch loss: {} , batch accuracy: {} , step time: {} ".format(epoch, epoch_step/len(train_loader), loss, accuracy * 100, step_time))
 
 if __name__ == "__main__":
     main(parser.parse_args())

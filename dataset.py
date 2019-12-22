@@ -6,7 +6,9 @@ import pickle
 
 class UrbanSound8KDataset(data.Dataset):
     def __init__(self, dataset_path, mode):
-        self.dataset = pickle.load(open(dataset_path, 'rb'))
+        with open(dataset_path, 'rb') as f:
+            self.dataset = pickle.load(f)
+        # self.dataset = pickle.load(open(dataset_path, 'rb'))
         self.mode = mode
 
     def __getitem__(self, index):
@@ -20,8 +22,8 @@ class UrbanSound8KDataset(data.Dataset):
             a = np.concatenate((logmel, chroma), axis=0)
             b = np.concatenate((spectral_contrast, tonnetz), axis=0)
             feature = np.concatenate((a, b), axis=0)         
-            #feature = torch.from_numpy(feature.astype(np.float32)).unsqueeze(0) (3D?)
-            feature = torch.from_numpy(feature.astype(np.float32))
+            feature = torch.from_numpy(feature.astype(np.float32)).unsqueeze(0)
+            # feature = torch.from_numpy(feature.astype(np.float32))
 
         elif self.mode == 'MC':
             mfcc = self.dataset[index]['features']['mfcc']

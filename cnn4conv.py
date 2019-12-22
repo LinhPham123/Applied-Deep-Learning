@@ -10,32 +10,32 @@ class CNN(nn.Module):
 
         
         self.layer1 = nn.Sequential(
-            nn.Conv2d(in_channels=1, out_channels=32, kernel_size=(3,3), stride=(2,2)),
+            nn.Conv2d(in_channels=1, out_channels=32, kernel_size=(3,3), stride=(2,2), padding=(43,21)),
             nn.BatchNorm2d(32),
             nn.ReLU()
         )
         self.initialise_layer(self.layer1)
        
         self.layer2 = nn.Sequential(
-            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3,3), stride=(2,2)),
+            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3,3), stride=(2,2), padding=(43,21)),
             nn.BatchNorm2d(64),
-            nn.ReLU,
-            nn.MaxPool2d(kernel_size=(2,2)),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=(2,2), padding=(1,1)),
             nn.Dropout(0.5)
         )
         self.initialise_layer(self.layer2)
        
         self.layer3 = nn.Sequential(
-            nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3,3), stride=(2,2)),
+            nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3,3), stride=(2,2), padding=(22, 11)),
             nn.BatchNorm2d(64),
-            nn.ReLU
+            nn.ReLU()
         )
         self.initialise_layer(self.layer3)
 
         self.layer4 = nn.Sequential(
-            nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3,3), stride=(2,2)),
+            nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3,3), stride=(2,2), padding=(1,1)),
             nn.BatchNorm2d(64),
-            nn.ReLU,
+            nn.ReLU(),
             nn.Dropout(0.5)
         )
         self.initialise_layer(self.layer4)
@@ -51,11 +51,17 @@ class CNN(nn.Module):
         self.initialise_layer(self.out)
 
     def forward(self, images: torch.Tensor) -> torch.Tensor:
+        
         x = self.layer1(images)
+        
         x = self.layer2(x)
+        
         x = self.layer3(x)
+       
         x = self.layer4(x)
+        
         x = torch.flatten(x, start_dim=1)
+       
         x = self.layer5(x)
         x = self.out(x)
         return x
