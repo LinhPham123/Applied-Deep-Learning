@@ -1,10 +1,13 @@
 from dataset import *
 from cnn4conv import *
 
+import sys,os
 import time
 import argparse
 import torch
 import torch.backends.cudnn
+import torch.optim
+
 from torch.utils.data import DataLoader
 from typing import Union, NamedTuple
 from multiprocessing import cpu_count
@@ -23,9 +26,14 @@ if torch.cuda.is_available():
 else:
     DEVICE = torch.device("cpu")
 
+dirname = os.path.dirname(__file__)
+my_train = os.path.join(dirname, 'UrbanSound8K_train.pkl')
+my_test = os.path.join(dirname, 'UrbanSound8K_test.pkl')
+
+
 def main(args):
-    train_dataset = UrbanSound8KDataset('UrbanSound8K_train.pkl', 'LMC')
-    test_dataset = UrbanSound8KDataset('UrbanSound8K_test.pkl', 'LMC')
+    train_dataset = UrbanSound8KDataset(my_train, 'LMC')
+    test_dataset = UrbanSound8KDataset(my_test, 'LMC')
 
     train_loader = torch.utils.data.DataLoader( 
         train_dataset, 
@@ -41,16 +49,15 @@ def main(args):
     model = CNN(1, 10, 0.5)
     model.to(DEVICE)
 
-    criterion = nn.Softmax()
+    criterion = nn.CrossEntropyLoss()
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=0.1)
     
-    val_frequency = 2
+    val_frequency = 5
     step = 0
-    print_frequency = 20
+    print_frequency = 200
 
     for epoch in range(0, 50):
-        print(epoch)
         model.train()
-        data_load_start_time = time.time()
    
         for batch, target, filename in train_loader:
             
@@ -59,26 +66,26 @@ def main(args):
             data_load_end_time = time.time()
 
             logits = model.forward(batch)
-            loss = criterion(logits)
-            loss.sum().backward()
-            
+            loss = criterion(logits, target)
+            loss.backward()
+            optimizer.step()
+            optimizer.zero_grad()
+
             with torch.no_grad():
                 preds = logits.argmax(-1)
                 accuracy = compute_accuracy(target, preds)
 
-            data_load_time = data_load_end_time - data_load_start_time
             step_time = time.time() - data_load_end_time
 
             if ((step + 1) % print_frequency) == 0:
-                print_metrics(step, epoch, accuracy, loss, data_load_time, step_time, train_loader)
+                print_metrics(step, epoch, accuracy, loss, step_time, train_loader)
             step += 1
-            data_load_start_time = time.time()
-
+        
         if ((epoch + 1) % val_frequency) == 0:
             results = {"preds": [], "labels": []}
             total_loss = 0
             model.eval()
-            print("here3")
+
             with torch.no_grad():
                 for batch, target, filename in val_loader:
                     batch = batch.to(DEVICE)
@@ -87,8 +94,10 @@ def main(args):
                     loss = criterion(logits, target)
                     total_loss += loss.item()
                     preds = logits.argmax(dim=-1).cpu().numpy()
+
                     results["preds"].extend(list(preds))
                     results["labels"].extend(list(target.cpu().numpy()))
+
 
             accuracy = compute_accuracy(
                 np.array(results["labels"]), np.array(results["preds"])
@@ -134,18 +143,18 @@ def compute_class_accuracy(
     return result
 
 
-def print_metrics(step, epoch, accuracy, loss, data_load_time, step_time, train_loader):
+def print_metrics(step, epoch, accuracy, loss, step_time, train_loader):
         epoch_step = step % len(train_loader)
-        # print(
-        #         f"epoch: [{epoch}], "
-        #         f"step: [{epoch_step}/{len(train_loader)}], "
-        #         f"batch loss: {loss:.5f}, "
-        #         f"batch accuracy: {accuracy * 100:2.2f}, "
-        #         f"data load time: "
-        #         f"{data_load_time:.5f}, "
-        #         f"step time: {step_time:.5f}"
-        # )
-        print("epoch: {} , step: {} , batch loss: {} , batch accuracy: {} , step time: {} ".format(epoch, epoch_step/len(train_loader), loss, accuracy * 100, step_time))
+        print(
+                f"epoch: [{epoch}], "
+                f"step: [{epoch_step}/{len(train_loader)}], "
+                f"batch loss: {loss:.5f}, "
+                f"batch accuracy: {accuracy * 100:2.2f}, "
+                # f"data load time: "
+                # f"{data_load_time:.5f}, "
+                f"step time: {step_time:.5f}"
+        )
+    
 
 if __name__ == "__main__":
     main(parser.parse_args())

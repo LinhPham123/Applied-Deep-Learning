@@ -21,7 +21,7 @@ class CNN(nn.Module):
             nn.BatchNorm2d(64),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=(2,2), padding=(1,1)),
-            nn.Dropout(0.5)
+            self.drop_out
         )
         self.initialise_layer(self.layer2)
        
@@ -36,14 +36,14 @@ class CNN(nn.Module):
             nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3,3), stride=(2,2), padding=(1,1)),
             nn.BatchNorm2d(64),
             nn.ReLU(),
-            nn.Dropout(0.5)
+            self.drop_out
         )
         self.initialise_layer(self.layer4)
 
         self.layer5 = nn.Sequential(
             nn.Linear(15488, 1024),
             nn.Sigmoid(),
-            nn.Dropout(0.5)
+            self.drop_out
         )
         self.initialise_layer(self.layer5)
         
