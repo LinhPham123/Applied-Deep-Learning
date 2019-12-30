@@ -55,7 +55,7 @@ class Trainer:
                     self.step += 1
                     data_load_start_time = time.time()
 
-                self.summary_writer.add_scalar("epoch", epoch, self.step)
+                # self.summary_writer.add_scalar("epoch", epoch, self.step)
                 
                 if ((epoch + 1) % val_frequency) == 0:
                     self.validate()
@@ -138,7 +138,7 @@ class Trainer:
 
 
     def log_trainning_metrics(self, epoch, accuracy, loss, data_load_time, step_time):
-        self.summary_writer.add_scalar("epoch", epoch, self.step)
+        # self.summary_writer.add_scalar("epoch", epoch, self.step)
         self.summary_writer.add_scalars(
                 "accuracy",
                 {"train": accuracy},
@@ -149,9 +149,9 @@ class Trainer:
                 {"train": float(loss.item())},
                 self.step
         )
-        self.summary_writer.add_scalar(
-                "time/data", data_load_time, self.step
-        )
-        self.summary_writer.add_scalar(
-                "time/data", step_time, self.step
-        )        
+        # self.summary_writer.add_scalar(
+        #         "time/data", data_load_time, self.step
+        # )
+        # self.summary_writer.add_scalar(
+        #         "time/data", step_time, self.step
+        # )        

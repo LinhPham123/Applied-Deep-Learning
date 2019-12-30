@@ -21,7 +21,7 @@ parser = argparse.ArgumentParser(
 )
 parser.add_argument("--learning-rate", default=1e-3, type=float, help="Learning rate")
 parser.add_argument("--mode", default="LMC", type=str, help="LMC or MC")
-parser.add_argument("--L2", default=0.001, type=float)
+parser.add_argument("--L2", default=1e-3, type=float)
 parser.add_argument("--log-dir", default=Path("logs"), type=Path)
 
 if torch.cuda.is_available():
@@ -41,7 +41,7 @@ def main(args):
     train_loader = torch.utils.data.DataLoader( 
         train_dataset, 
         batch_size=32, shuffle=True, 
-        num_workers=0, pin_memory=True) # 0 on local, cpu_count() on bc4
+        num_workers=cpu_count(), pin_memory=True) # 0 on local, cpu_count() on bc4
  
     val_loader = torch.utils.data.DataLoader( 
         test_dataset, 

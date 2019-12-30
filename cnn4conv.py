@@ -11,22 +11,22 @@ class CNN(nn.Module):
         
         self.conv1 = nn.Conv2d(in_channels=1, out_channels=32, kernel_size=(3,3), stride=(2,2), padding=(43,21))
         self.initialise_layer(self.conv1)
-        self.bn32 = nn.BatchNorm2d(32)
+        self.bn32_1 = nn.BatchNorm2d(32)
         
          
-        self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3,3), stride=(2,2), padding=(43,21))
+        self.conv2 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(3,3), stride=(2,2), padding=(43,21))
         self.initialise_layer(self.conv2)
-        self.bn64_1 = nn.BatchNorm2d(64)
+        self.bn32_2 = nn.BatchNorm2d(32)
  
         self.pool = nn.MaxPool2d(kernel_size=(2,2), padding=(1,1))
 
-        self.conv3 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3,3), stride=(2,2), padding=(22, 11))
+        self.conv3 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3,3), stride=(2,2), padding=(22, 11))
         self.initialise_layer(self.conv3)
-        self.bn64_2 = nn.BatchNorm2d(64)
+        self.bn64_1 = nn.BatchNorm2d(64)
 
         self.conv4 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3,3), stride=(2,2), padding=(1,1))
         self.initialise_layer(self.conv4)
-        self.bn64_3 = nn.BatchNorm2d(64)
+        self.bn64_2 = nn.BatchNorm2d(64)
 
         self.fc = nn.Linear(15488, 1024)
         self.initialise_layer(self.fc)
@@ -35,33 +35,32 @@ class CNN(nn.Module):
         self.initialise_layer(self.out)
 
     def forward(self, images: torch.Tensor) -> torch.Tensor:
-        
         x = self.conv1(images)
-        x = self.bn32(x)
+        x = self.bn32_1(x)
         x = F.relu(x)
         
         x = self.conv2(x)
-        x = self.bn64_1(x)
+        x = self.bn32_2(x)
         x = F.relu(x)
         x = self.pool(x)
         x = self.drop_out(x)
         
         x = self.conv3(x)
-        x = self.bn64_2(x)
+        x = self.bn64_1(x)
         x = F.relu(x)
-      
+
         x = self.conv4(x)
-        x = self.bn64_3(x)
+        x = self.bn64_2(x)
         x = F.relu(x)
         x = self.drop_out(x)
         
         x = torch.flatten(x, start_dim=1)
-       
         x = self.fc(x)
         x = torch.sigmoid(x)
         x = self.drop_out(x)
 
         x = self.out(x)
+    
         return x
 
     @staticmethod
@@ -70,3 +69,19 @@ class CNN(nn.Module):
             nn.init.zeros_(layer.bias)
         if hasattr(layer, "weight"):
             nn.init.kaiming_normal_(layer.weight)
+
+
+# model = CNN(1, 10)
+
+
+# import numpy
+# total_param = 0
+# for name, param in model.named_parameters():
+#     if param.requires_grad:
+#         num_param = numpy.prod(param.size())
+#         if param.dim() > 1:
+#             print(name, ':', 'x'.join(str(x) for x in list(param.size())), '=', num_param)
+#         else:
+#             print(name, ':', num_param)
+#         total_param += num_param
+# print(total_param)
