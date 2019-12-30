@@ -1,78 +1,69 @@
 import torch
 from torch import nn
+from torch.nn import functional as F
 
 class CNN(nn.Module):
-    def __init__(self, channels: int, class_count: int, dropout: float):
+    def __init__(self, channels: int, class_count: int):
         super(CNN, self).__init__()
 
         self.class_count = class_count
-        self.drop_out = nn.Dropout(dropout)
+        self.drop_out = nn.Dropout(0.5)
         
-        self.layer1 = nn.Sequential(
-            nn.Conv2d(in_channels=1, out_channels=32, kernel_size=(3,3), stride=(2,2), padding=(43,21)),
-            nn.BatchNorm2d(32),
-            nn.ReLU()
-        )
-        self.layer1.apply(self.init_weights_bias)
-
-        self.layer2 = nn.Sequential(
-            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3,3), stride=(2,2), padding=(43,21)),
-            nn.BatchNorm2d(64),
-            nn.ReLU(),
-            nn.MaxPool2d(kernel_size=(2,2), padding=(1,1)),
-            # self.drop_out
-        )
-        self.layer2.apply(self.init_weights_bias)
-       
-        self.layer3 = nn.Sequential(
-            nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3,3), stride=(2,2), padding=(22, 11)),
-            nn.BatchNorm2d(64),
-            nn.ReLU()
-        )
-        self.layer3.apply(self.init_weights_bias)
-
-        self.layer4 = nn.Sequential(
-            nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3,3), stride=(2,2), padding=(1,1)),
-            nn.BatchNorm2d(64),
-            nn.ReLU(),
-            # self.drop_out
-        )
-        self.layer4.apply(self.init_weights_bias)
-
-        self.layer5 = nn.Sequential(
-            nn.Linear(15488, 1024),
-            nn.Sigmoid(),
-            # self.drop_out
-        )
-        self.layer5.apply(self.init_weights_bias)
+        self.conv1 = nn.Conv2d(in_channels=1, out_channels=32, kernel_size=(3,3), stride=(2,2), padding=(43,21))
+        self.initialise_layer(self.conv1)
+        self.bn32 = nn.BatchNorm2d(32)
         
+         
+        self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3,3), stride=(2,2), padding=(43,21))
+        self.initialise_layer(self.conv2)
+        self.bn64_1 = nn.BatchNorm2d(64)
+ 
+        self.pool = nn.MaxPool2d(kernel_size=(2,2), padding=(1,1))
+
+        self.conv3 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3,3), stride=(2,2), padding=(22, 11))
+        self.initialise_layer(self.conv3)
+        self.bn64_2 = nn.BatchNorm2d(64)
+
+        self.conv4 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3,3), stride=(2,2), padding=(1,1))
+        self.initialise_layer(self.conv4)
+        self.bn64_3 = nn.BatchNorm2d(64)
+
+        self.fc = nn.Linear(15488, 1024)
+        self.initialise_layer(self.fc)
+   
         self.out = nn.Linear(1024, 10) #don't need softMax here because crossEntropy already have softMax
         self.initialise_layer(self.out)
 
     def forward(self, images: torch.Tensor) -> torch.Tensor:
         
-        x = self.layer1(images)
+        x = self.conv1(images)
+        x = self.bn32(x)
+        x = F.relu(x)
         
-        x = self.layer2(x)
+        x = self.conv2(x)
+        x = self.bn64_1(x)
+        x = F.relu(x)
+        x = self.pool(x)
         x = self.drop_out(x)
         
-        x = self.layer3(x)
-       
-        x = self.layer4(x)
+        x = self.conv3(x)
+        x = self.bn64_2(x)
+        x = F.relu(x)
+      
+        x = self.conv4(x)
+        x = self.bn64_3(x)
+        x = F.relu(x)
         x = self.drop_out(x)
         
         x = torch.flatten(x, start_dim=1)
        
-        x = self.layer5(x)
+        x = self.fc(x)
+        x = torch.sigmoid(x)
         x = self.drop_out(x)
 
         x = self.out(x)
         return x
 
-    def init_weights_bias(self, m):
-        if type(m) == nn.Linear or type(m) == nn.Conv2d:
-            self.initialise_layer(m)
-   
     @staticmethod
     def initialise_layer(layer):
         if hasattr(layer, "bias"):
