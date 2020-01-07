@@ -18,23 +18,16 @@ class UrbanSound8KDataset(data.Dataset):
         tonnetz = self.dataset[index]['features']['tonnetz']
 
         if self.mode == 'LMC':     
-            a = np.concatenate((logmel, chroma), axis=0)
-            b = np.concatenate((spectral_contrast, tonnetz), axis=0)
-            feature = np.concatenate((a, b), axis=0)         
-            feature = torch.from_numpy(feature.astype(np.float32)).unsqueeze(0) #size [32, 1, 85, 41]
+            feature = np.concatenate((logmel, chroma, spectral_contrast, tonnetz), axis=0)      
+            feature = torch.from_numpy(feature.astype(np.float32)).unsqueeze(0) #size [1, 85, 41]
     
         elif self.mode == 'MC':
-            a = np.concatenate((mfcc, chroma), axis=0)
-            b = np.concatenate((spectral_contrast, tonnetz), axis=0)
-            feature = np.concatenate((a, b), axis=0)  
-            feature = torch.from_numpy(feature.astype(np.float32)).unsqueeze(0)
+            feature = np.concatenate((mfcc, chroma, spectral_contrast, tonnetz), axis=0)
+            feature = torch.from_numpy(feature.astype(np.float32)).unsqueeze(0) #size [1, 85, 41]
 
         elif self.mode == 'MLMC':
-            a = np.concatenate((mfcc, logmel), axis=0)
-            b = np.concatenate((chroma, spectral_contrast), axis=0)
-            c = np.concatenate((a, b), axis=0)
-            feature = np.concatenate((c, tonnetz), axis=0)     
-            feature = torch.from_numpy(feature.astype(np.float32)).unsqueeze(0)
+            feature = np.concatenate((mfcc, logmel, chroma, spectral_contrast, tonnetz), axis=0)   
+            feature = torch.from_numpy(feature.astype(np.float32)).unsqueeze(0) #size [1, 145, 41]
        
         label = self.dataset[index]['classID']
         fname = self.dataset[index]['filename']
