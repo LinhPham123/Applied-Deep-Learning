@@ -29,8 +29,6 @@ parser.add_argument("--epochs", default=100, type=int)
 
 parser.add_argument("--checkpoint-path", default=Path("saved_model.pt"), type=Path)
 
-parser.add_argument("--stride", default=True, type=bool)
-
 if torch.cuda.is_available():
     DEVICE = torch.device("cuda")
 else:
@@ -90,7 +88,7 @@ def main(args):
              batch_size=32, shuffle=True,
              num_workers=cpu_count(), pin_memory=True) 
 
-        test_loader = torch.utils.data.DataLoader(
+        val_loader = torch.utils.data.DataLoader(
              ConcatDataset(
                  UrbanSound8KDataset(my_test, "LMC"),
                  UrbanSound8KDataset(my_test, "MC")
@@ -105,7 +103,7 @@ def main(args):
         LMC_optimizer = torch.optim.Adam(LMCNet.parameters(), lr=args.learning_rate, weight_decay=args.L2)
         MC_optimizer = torch.optim.Adam(MCNet.parameters(), lr=args.learning_rate, weight_decay=args.L2)
 
-        double_trainer = DoubleTrainer(LMCNet, MCNet, DEVICE, train_loader, test_loader, criterion, LMC_optimizer, MC_optimizer, summary_writer, args.epochs)
+        double_trainer = DoubleTrainer(LMCNet, MCNet, DEVICE, train_loader, val_loader, criterion, LMC_optimizer, MC_optimizer, summary_writer, args.epochs)
         double_trainer.train()
    
     summary_writer.close()

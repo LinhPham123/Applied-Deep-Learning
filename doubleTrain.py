@@ -46,7 +46,7 @@ class DoubleTrainer:
                     MC_labels = MC_labels.to(self.device)
                     
                     LMC_logits = self.LMC_model.forward(LMC_batch)
-                    MC_logits = self.MC_model.forward(LMC_batch)
+                    MC_logits = self.MC_model.forward(MC_batch)
                     logits = (self.softmax(LMC_logits) + self.softmax(MC_logits)) / 2
 
                     LMC_loss = self.criterion(LMC_logits, LMC_labels)
@@ -60,7 +60,6 @@ class DoubleTrainer:
                     self.optimizer2.zero_grad()
 
                     labels = LMC_labels
-                    loss = self.criterion(logits, labels)
 
                     with torch.no_grad():
                         preds = logits.argmax(-1)
@@ -68,9 +67,9 @@ class DoubleTrainer:
                         average_class_accuracy = batch_class_accuracies.sum() / 10
 
                     if ((self.step + 1) % log_frequency) == 0:
-                        self.log_trainning_metrics(average_class_accuracy, loss)
+                        self.log_trainning_metrics(average_class_accuracy)
                     if ((self.step + 1) % print_frequency) == 0:
-                        self.print_training_metrics(average_class_accuracy, epoch, loss)
+                        self.print_training_metrics(average_class_accuracy, epoch)
 
                     self.step += 1
 
@@ -93,7 +92,11 @@ class DoubleTrainer:
         with torch.no_grad():
             for (LMC_data, MC_data) in self.val_loader:
                 LMC_batch, LMC_labels, LMC_batch_filenames = LMC_data
-                MC_batch, _ , _ = MC_data
+                MC_batch, MC_labels , MC_batch_filenames = MC_data
+
+                print(MC_labels == LMC_labels)
+                print(LMC_batch_filenames == MC_batch_filenames)
+
 
                 LMC_batch = LMC_batch.to(self.device)
                 MC_batch = MC_batch.to(self.device)
@@ -103,9 +106,6 @@ class DoubleTrainer:
                 MC_logits = self.MC_model(MC_batch)
                 logits = (self.softmax(LMC_logits) + self.softmax(MC_logits)) / 2
 
-                loss = self.criterion(logits, labels)
-                total_loss += loss.item()
-               
                 for i, filename in enumerate(LMC_batch_filenames):
                     if filename not in unique_filenames.keys():
                         unique_filenames[filename] = unique_filenames_count
@@ -118,15 +118,13 @@ class DoubleTrainer:
             preds = file_logits.argmax(dim=-1).cpu().numpy()
             results["preds"].extend(list(preds))
 
-       
-        average_loss = total_loss / len(self.val_loader)
-
         class_accuracies = compute_class_accuracy(
             np.array(results["labels"]), np.array(results["preds"])
         )
         average_class_accuracy = class_accuracies.sum() / 10
 
-        print(f"validation loss: {average_loss:.5f}, average class accuracy: {average_class_accuracy}")
+        # print(f"validation loss: {average_loss:.5f}, average class accuracy: {average_class_accuracy}")
+        print(f"average class accuracy: {average_class_accuracy}")
         print(f"per-class accuracy: {class_accuracies}")
 
         self.summary_writer.add_scalars(
@@ -134,30 +132,19 @@ class DoubleTrainer:
                 {"test": average_class_accuracy},
                 self.step
         )
-        self.summary_writer.add_scalars(
-                "loss",
-                {"test": average_loss},
-                self.step
-        )
 
 
-    def print_training_metrics(self, accuracy, epoch, loss):
+    def print_training_metrics(self, accuracy, epoch):
         epoch_step = self.step % (len(self.train_loader))
         print(
             f"epoch: [{epoch}], "
             f"step: [{epoch_step}/{len(self.train_loader)}], "
-            f"batch loss: {loss:.5f}, "
             f"batch accuracy: {accuracy}, "
         )
 
-    def log_trainning_metrics(self, accuracy, loss):
+    def log_trainning_metrics(self, accuracy):
         self.summary_writer.add_scalars(
                 "average accuracy",
                 {"train": accuracy},
-                self.step
-        )
-        self.summary_writer.add_scalars(
-                "loss",
-                {"train": float(loss.item())},
                 self.step
         )
