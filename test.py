@@ -1,7 +1,7 @@
 from dataset import *
+from cnn4conv import *
 from utils import *
 from train import *
-from cnnNoStride import *
 from doubleTrain import *
 
 import sys,os
@@ -23,7 +23,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument("--learning-rate", default=1e-3, type=float, help="Learning rate")
 parser.add_argument("--mode", default="LMC", type=str, help="LMC, MC, MLMC or TSCNN")
 parser.add_argument("--L2", default=1e-3, type=float)
-parser.add_argument("--log-dir", default=Path("logs"), type=Path)
+parser.add_argument("--log-dir", default=Path("log1s"), type=Path)
 parser.add_argument("--epochs", default=100, type=int)
 
 
@@ -72,7 +72,7 @@ def main(args):
             num_workers=cpu_count(), pin_memory=True) 
 
 
-        model = CNNNoStride(input_height=height,input_width=width,input_channels=channels)
+        model = CNN(input_height=height,input_width=width,input_channels=channels)
         optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate, weight_decay=args.L2)
         trainer = Trainer(model=model, device=DEVICE, 
                     train_loader=train_loader, val_loader=val_loader, 
@@ -99,8 +99,8 @@ def main(args):
              num_workers=cpu_count(), pin_memory=True)
 
  
-        LMCNet = CNNNoStride(input_height=height,input_width=width,input_channels=channels)
-        MCNet = CNNNoStride(input_height=height,input_width=width,input_channels=channels)
+        LMCNet = CNN(input_height=height,input_width=width,input_channels=channels)
+        MCNet = CNN(input_height=height,input_width=width,input_channels=channels)
 
         LMC_optimizer = torch.optim.Adam(LMCNet.parameters(), lr=args.learning_rate, weight_decay=args.L2)
         MC_optimizer = torch.optim.Adam(MCNet.parameters(), lr=args.learning_rate, weight_decay=args.L2)
