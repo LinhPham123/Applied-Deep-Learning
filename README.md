@@ -1,4 +1,4 @@
 # Applied-Deep-Learning
-Enviromental Sound Classification neural network based on pytorch
+Two-stream Enviromental Sound Classification neural network based on pytorch
 
 Includes two different CNN models
