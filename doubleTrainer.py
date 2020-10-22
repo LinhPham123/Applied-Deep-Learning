@@ -6,7 +6,6 @@ from torch.utils.tensorboard import SummaryWriter
 from utils import *
 import time
 
-
 class DoubleTrainer:
     def __init__(self, model1: nn.Module, model2:nn.Module, device: torch.device,
                 train_loader: DataLoader, val_loader: DataLoader,
@@ -78,7 +77,6 @@ class DoubleTrainer:
                     self.LMC_model.train()
                     self.MC_model.train()
                      
-
     def validate(self):
         total_loss = 0
         self.LMC_model.eval()
@@ -132,7 +130,6 @@ class DoubleTrainer:
                 {"test": average_class_accuracy},
                 self.step
         )
-
 
     def print_training_metrics(self, accuracy, epoch):
         epoch_step = self.step % (len(self.train_loader))
