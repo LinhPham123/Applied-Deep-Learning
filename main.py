@@ -1,8 +1,8 @@
 from dataset import *
 from utils import *
-from train import *
+from trainer import *
+from doubleTrainer import *
 from cnnNoStride import *
-from doubleTrain import *
 
 import sys,os
 from pathlib import Path
@@ -25,8 +25,6 @@ parser.add_argument("--mode", default="LMC", type=str, help="LMC, MC, MLMC or TS
 parser.add_argument("--L2", default=1e-3, type=float)
 parser.add_argument("--log-dir", default=Path("logs"), type=Path)
 parser.add_argument("--epochs", default=100, type=int)
-
-
 parser.add_argument("--checkpoint-path", default=Path("saved_model.pt"), type=Path)
 
 if torch.cuda.is_available():
@@ -37,7 +35,6 @@ else:
 dirname = os.path.dirname(__file__)
 my_train = os.path.join(dirname, 'UrbanSound8K_train.pkl')
 my_test = os.path.join(dirname, 'UrbanSound8K_test.pkl')
-
 
 def main(args):
     height = 85
@@ -69,7 +66,6 @@ def main(args):
             batch_size=32, shuffle=False,
             num_workers=cpu_count(), pin_memory=True) 
 
-
         model = CNNNoStride(input_height=height,input_width=width,input_channels=channels)
         optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate, weight_decay=args.L2)
         trainer = Trainer(model=model, device=DEVICE, 
@@ -77,7 +73,6 @@ def main(args):
                     criterion=criterion, optimizer=optimizer, 
                     summary_writer=summary_writer, epochs=args.epochs)
         trainer.train()
-
 
     else:
         train_loader = torch.utils.data.DataLoader(
@@ -96,7 +91,6 @@ def main(args):
              batch_size=32, shuffle=False,
              num_workers=cpu_count(), pin_memory=True)
 
- 
         LMCNet = CNNNoStride(input_height=height,input_width=width,input_channels=channels)
         MCNet = CNNNoStride(input_height=height,input_width=width,input_channels=channels)
 
@@ -107,7 +101,6 @@ def main(args):
         double_trainer.train()
    
     summary_writer.close()
- 
 
 if __name__ == "__main__":
     main(parser.parse_args())
