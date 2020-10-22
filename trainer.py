@@ -6,7 +6,6 @@ from torch.utils.tensorboard import SummaryWriter
 from utils import *
 import time
 
-
 class Trainer:
     def __init__(self, model: nn.Module, device: torch.device,
                 train_loader: DataLoader, val_loader: DataLoader,
@@ -53,7 +52,6 @@ class Trainer:
                     self.validate()
                     self.model.train()
                      
-
     def validate(self):
         total_loss = 0
         self.model.eval()
@@ -105,7 +103,6 @@ class Trainer:
                 {"test": average_loss},
                 self.step
         )
-
 
     def print_training_metrics(self, accuracy, loss):
         epoch_step = self.step % len(self.train_loader)
