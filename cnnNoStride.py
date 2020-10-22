@@ -60,22 +60,3 @@ class CNNNoStride(nn.Module):
             nn.init.zeros_(layer.bias)
         if hasattr(layer, "weight"):
             nn.init.kaiming_normal_(layer.weight, nonlinearity='relu')
-
-
-# shape = ImageShape(height=145,width=41,channels=1)
-# from torchsummary import summary
-# model = CNNNoStride(85,41,1, 10, "LMC")
-# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-# model = model.to(device)
-# summary(model,(1,85,41), 32)
-# import numpy
-# total_param = 0
-# for name, param in model.named_parameters():
-#     if param.requires_grad:
-#         num_param = numpy.prod(param.size())
-#         if param.dim() > 1:
-#             print(name, ':', 'x'.join(str(x) for x in list(param.size())), '=', num_param)
-#         else:
-#             print(name, ':', num_param)
-#         total_param += num_param
-# print(total_param)
